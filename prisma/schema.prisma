@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  nick           String   @unique
+  email          String   @unique
+  passwordHash   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  height         Float?
+  dateOfBirth    DateTime?
+  sex            String?
+  activityLevel  String?
+  currentWeight  Float?
+  targetWeight   Float?
+  targetDays     Int?
+
+  products      Product[]
+  foodEntries   FoodEntry[]
+  weightLogs         WeightLog[]
+  refreshTokens      RefreshToken[]
+  pushSubscriptions  PushSubscription[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name           String
+  shortName      String?
+  brand          String?
+  description    String?
+  photoUrl       String?
+  category       String?
+  subCategory    String?
+  barcode        String?
+
+  caloriesPer100 Float
+  proteinPer100  Float    @default(0)
+  fatPer100      Float    @default(0)
+  carbsPer100    Float    @default(0)
+  sugarPer100    Float?
+  fiberPer100    Float?
+  saltPer100     Float?
+
+  servingUnit    String   @default("g")
+  baseServing    Float    @default(100)
+
+  source         String   @default("manual")
+  aiConfirmed    Boolean  @default(false)
+  isFavorite     Boolean  @default(false)
+  lastUsedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  foodEntries FoodEntry[]
+
+  @@map("products")
+}
+
+model FoodEntry {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+
+  date         DateTime
+  mealCategory String?
+  amount       Float
+  servingUnit  String
+
+  calories     Float
+  protein      Float
+  fat          Float
+  carbs        Float
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("food_entries")
+}
+
+model WeightLog {
+  id       String   @id @default(uuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weight   Float
+  loggedAt DateTime @default(now())
+  note     String?
+
+  @@map("weight_logs")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@map("push_subscriptions")
+}
